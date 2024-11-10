@@ -117,7 +117,8 @@ Object.defineProperty(exports, 'Types', {
 /**
  * Load the given class.
  * @param {string} className Name of class to default
- * @return {function|object} Class constructor or exports
+ * @return {(function|object)} Class constructor or exports
+ * @throws {Error} Throws if the specified class cannot be found
  * @private
  */
 function loadClass(className) {
@@ -127,31 +128,21 @@ function loadClass(className) {
     return Class;
   }
 
-  // This uses a switch for static require analysis
-  switch (className) {
-    case 'Connection':
-      Class = require('./lib/Connection');
-      break;
-    case 'ConnectionConfig':
-      Class = require('./lib/ConnectionConfig');
-      break;
-    case 'Pool':
-      Class = require('./lib/Pool');
-      break;
-    case 'PoolCluster':
-      Class = require('./lib/PoolCluster');
-      break;
-    case 'PoolConfig':
-      Class = require('./lib/PoolConfig');
-      break;
-    case 'SqlString':
-      Class = require('./lib/protocol/SqlString');
-      break;
-    case 'Types':
-      Class = require('./lib/protocol/constants/types');
-      break;
-    default:
-      throw new Error('Cannot find class \'' + className + '\'');
+  // Use an object lookup for dynamic requires
+  var classMap = {
+    'Connection'       : './lib/Connection',
+    'ConnectionConfig' : './lib/ConnectionConfig',
+    'Pool'             : './lib/Pool',
+    'PoolCluster'      : './lib/PoolCluster',
+    'PoolConfig'       : './lib/PoolConfig',
+    'SqlString'        : './lib/protocol/SqlString',
+    'Types'            : './lib/protocol/constants/types'
+  };
+
+  if (classMap[className]) {
+    Class = require(classMap[className]);
+  } else {
+    throw new Error('Cannot find class \'' + className + '\'');
   }
 
   // Store to prevent invoking require()
